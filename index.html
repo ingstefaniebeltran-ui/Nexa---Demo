@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXA · Simulación operativa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:            #0A0F1C;
+      --panel:         #111827;
+      --panel-2:       #182030;
+      --border:        #1E3A5F;
+      --teal:          #0FBA81;
+      --amber:         #F59E0B;
+      --success:       #22C55E;
+      --text-primary:  #E2E8F0;
+      --text-secondary:#94A3B8;
+      --text-dim:      #4B6080;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 15, 28, 0.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .logo {
+      font-size: 21px;
+      font-weight: 800;
+      color: var(--teal);
+      letter-spacing: -0.03em;
+      flex-shrink: 0;
+    }
+    .sim-badge {
+      background: rgba(245, 158, 11, 0.13);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.32);
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 9px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .header-sub {
+      color: var(--text-dim);
+      font-size: 12px;
+      flex: 1 1 100%;
+      margin-top: -2px;
+    }
+    @media (min-width: 640px) {
+      .header-sub { flex: 1 1 auto; margin-top: 0; }
+    }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 28px 16px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    /* ── Section 1: Un día de NEXA ── */
+    .day-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 640px) {
+      .day-grid { grid-template-columns: 1fr 1.4fr; }
+    }
+
+    .counter-panel {
+      text-align: center;
+      padding: 28px 20px 24px;
+    }
+    .counter-eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 10px;
+    }
+    .counter-value {
+      font-size: 72px;
+      font-weight: 800;
+      color: var(--teal);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .counter-sub {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+    .counter-actions {
+      margin-top: 18px;
+    }
+    .btn-reset {
+      background: rgba(15, 186, 129, 0.10);
+      border: 1px solid rgba(15, 186, 129, 0.30);
+      color: var(--teal);
+      border-radius: 8px;
+      padding: 7px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .btn-reset:hover { background: rgba(15, 186, 129, 0.20); }
+
+    /* Feed */
+    .feed-panel {
+      padding: 0;
+      overflow: hidden;
+    }
+    .feed-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feed-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+      flex-shrink: 0;
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .feed-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .feed-body {
+      max-height: 340px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .feed-body::-webkit-scrollbar { width: 3px; }
+    .feed-body::-webkit-scrollbar-track { background: transparent; }
+    .feed-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .feed-item {
+      display: grid;
+      grid-template-columns: 7px 1fr auto;
+      align-items: start;
+      gap: 12px;
+      padding: 11px 18px;
+      border-bottom: 1px solid rgba(30, 58, 95, 0.45);
+      animation: slideDown 0.35s ease;
+    }
+    .feed-item:last-child { border-bottom: none; }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .feed-dot-status {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .dot-green  { background: var(--success); }
+    .dot-amber  { background: var(--amber); }
+
+    .feed-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .feed-meta {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    .feed-timing {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 3px;
+    }
+
+    .feed-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 5px;
+      white-space: nowrap;
+      margin-top: 1px;
+    }
+    .badge-nexa   { background: rgba(34,197,94,.11); color: var(--success); border: 1px solid rgba(34,197,94,.28); }
+    .badge-sea    { background: rgba(15,186,129,.11); color: var(--teal);    border: 1px solid rgba(15,186,129,.28); }
+    .badge-pending{ background: rgba(245,158,11,.10); color: var(--amber);   border: 1px solid rgba(245,158,11,.28); }
+    .badge-escalated{ background: rgba(245,158,11,.07); color: #d97706; border: 1px solid rgba(245,158,11,.2); }
+
+    /* ── Section 2: KPIs ── */
+    .kpis-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 640px) {
+      .kpis-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .kpi-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 16px;
+    }
+    .kpi-card.accent-teal  { border-color: rgba(15,186,129,.25); background: rgba(15,186,129,.05); }
+    .kpi-card.accent-amber { border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.05); }
+
+    .kpi-value {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .kpi-card.accent-teal  .kpi-value { color: var(--teal); }
+    .kpi-card.accent-amber .kpi-value { color: var(--amber); }
+    .kpi-card:not(.accent-teal):not(.accent-amber) .kpi-value { color: var(--text-primary); }
+
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-top: 7px;
+    }
+    .kpi-note {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      line-height: 1.45;
+    }
+
+    /* ── Section 3: Comparativa ── */
+    .comparison-wrap {
+      padding: 0;
+      overflow: hidden;
+    }
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .comp-table thead th {
+      background: var(--panel-2);
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 11px 18px;
+      text-align: left;
+    }
+    .comp-table thead th:last-child { text-align: right; }
+    .comp-table tbody td {
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(30, 58, 95, 0.4);
+      vertical-align: middle;
+    }
+    .comp-table tbody tr:last-child td { border-bottom: none; }
+    .comp-table tbody td:last-child { text-align: right; }
+    .td-aspect { color: var(--text-secondary); font-size: 12px; width: 38%; }
+    .td-before { color: var(--text-primary); }
+    .td-after  { color: var(--teal); font-weight: 700; }
+
+    .roi-strip {
+      margin: 0;
+      padding: 13px 18px;
+      background: rgba(15, 186, 129, 0.06);
+      border-top: 1px solid rgba(15, 186, 129, 0.18);
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .roi-strip strong { color: var(--teal); }
+
+    /* ── Section 4: Shadow Mode ── */
+    .shadow-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 640px) {
+      .shadow-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    }
+
+    .shadow-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .shadow-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .shadow-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .shadow-target {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--teal);
+      white-space: nowrap;
+    }
+    .shadow-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .progress-track {
+      height: 5px;
+      background: rgba(30, 58, 95, 0.6);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--teal);
+      width: 0;
+      transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .progress-bar.bar-caution { background: var(--amber); }
+    .shadow-status {
+      font-size: 11px;
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 36px 20px 32px;
+    }
+    .tagline {
+      font-size: clamp(16px, 4vw, 22px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.35;
+    }
+    .tagline-teal  { color: var(--teal); }
+    .tagline-white { color: var(--text-primary); }
+    .footer-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <span class="logo">NEXA</span>
+  <span class="sim-badge">Simulación — escenario proyectado</span>
+  <span class="header-sub">Una de las tres mayores prepagas del país &nbsp;·&nbsp; Alcance v1.0: ambulatorio + cirugías</span>
+</header>
+
+<main>
+
+  <!-- 1. UN DÍA DE NEXA -->
+  <section>
+    <div class="section-title">Un día de NEXA</div>
+    <div class="day-grid">
+
+      <div class="panel counter-panel">
+        <div class="counter-eyebrow">Solicitudes procesadas hoy</div>
+        <div class="counter-value" id="counter-display">0</div>
+        <div class="counter-sub">
+          ~1.699 sol/día<br>
+          50.961 sol/mes (alcance v1.0)
+        </div>
+        <div class="counter-actions">
+          <button class="btn-reset" onclick="restart()">↺ Reiniciar simulación</button>
+        </div>
+      </div>
+
+      <div class="panel feed-panel">
+        <div class="feed-header">
+          <div class="feed-dot"></div>
+          <span class="feed-title">Casos en tiempo real</span>
+        </div>
+        <div class="feed-body" id="feed-body"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 2. KPIs -->
+  <section>
+    <div class="section-title">KPIs del día</div>
+    <div class="kpis-grid">
+      <div class="kpi-card accent-teal">
+        <div class="kpi-value">62%</div>
+        <div class="kpi-label">Sin intervención humana</div>
+        <div class="kpi-note">Promedio ponderado · ambulatorio + cirugías</div>
+      </div>
+      <div class="kpi-card accent-teal">
+        <div class="kpi-value" style="font-size:26px; padding-top:4px;">Inmediato</div>
+        <div class="kpi-label">Respuesta inicial</div>
+        <div class="kpi-note">Asesoramiento y auth admin · vs. 48 hs antes</div>
+      </div>
+      <div class="kpi-card accent-amber">
+        <div class="kpi-value">24/7</div>
+        <div class="kpi-label">Cobertura horaria</div>
+        <div class="kpi-note">Antes: Lun–Vie 7:00–16:00</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value" style="font-size:24px; padding-top:4px;">USD 2,53M</div>
+        <div class="kpi-label">Ahorro bruto / año</div>
+        <div class="kpi-note">Escenario conservador · ROI 5×</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. COMPARATIVA -->
+  <section>
+    <div class="section-title">Proceso actual vs. con NEXA</div>
+    <div class="panel comparison-wrap">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Proceso actual</th>
+            <th>Con NEXA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-aspect">Horario de atención</td>
+            <td class="td-before">Lun–Vie · 7:00–16:00</td>
+            <td class="td-after">24 / 7</td>
+          </tr>
+          <tr>
+            <td class="td-aspect">SLA asesoramiento</td>
+            <td class="td-before">Horas / días</td>
+            <td class="td-after">Inmediato</td>
+          </tr>
+          <tr>
+            <td class="td-aspect">SLA auth administrativa</td>
+            <td class="td-before">48 hs hábiles</td>
+            <td class="td-after">Inmediato</td>
+          </tr>
+          <tr>
+            <td class="td-aspect">SLA cirugías con insumos</td>
+            <td class="td-before">8 días hábiles</td>
+            <td class="td-after">72 hs</td>
+          </tr>
+          <tr>
+            <td class="td-aspect">Costo por solicitud (staff)</td>
+            <td class="td-before">USD 7,03</td>
+            <td class="td-after">USD 1,20 (Tier auth)</td>
+          </tr>
+          <tr>
+            <td class="td-aspect">Ahorro bruto anual</td>
+            <td class="td-before">—</td>
+            <td class="td-after">USD 2,53M</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="roi-strip">
+        Por cada dólar invertido en NEXA, la prepaga ahorra cinco. &nbsp;<strong>ROI 5× · escenario conservador</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. SHADOW MODE -->
+  <section>
+    <div class="section-title">Shadow Mode — Metas del piloto</div>
+    <div class="panel">
+      <div class="shadow-grid">
+
+        <div class="shadow-card">
+          <div class="shadow-top">
+            <div class="shadow-label">Clasificación autónoma</div>
+            <div class="shadow-target">≥ 60%</div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-bar" id="pb-1"></div>
+          </div>
+          <div class="shadow-desc">NEXA clasifica el tipo de solicitud correctamente sin corrección humana</div>
+          <div class="shadow-status">▸ Objetivo a validar en piloto</div>
+        </div>
+
+        <div class="shadow-card">
+          <div class="shadow-top">
+            <div class="shadow-label">Concordancia con auditor</div>
+            <div class="shadow-target">≥ 95%</div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-bar" id="pb-2"></div>
+          </div>
+          <div class="shadow-desc">El criterio de NEXA coincide con la decisión final del auditor médico</div>
+          <div class="shadow-status">▸ Objetivo a validar en piloto</div>
+        </div>
+
+        <div class="shadow-card">
+          <div class="shadow-top">
+            <div class="shadow-label">Error crítico PMO</div>
+            <div class="shadow-target">≤ 1%</div>
+          </div>
+          <div class="progress-track">
+            <div class="progress-bar bar-caution" id="pb-3"></div>
+          </div>
+          <div class="shadow-desc">Casos donde NEXA contradice una regla explícita del programa médico obligatorio</div>
+          <div class="shadow-status">▸ Objetivo a validar en piloto</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="tagline">
+    <span class="tagline-teal">Automático cuando puede.</span><br>
+    <span class="tagline-white">Human in the loop cuando importa.</span>
+  </div>
+  <div class="footer-sub">NEXA &nbsp;·&nbsp; Alcance v1.0 &nbsp;·&nbsp; Escenario proyectado</div>
+</footer>
+
+<script>
+  "use strict";
+
+  // ── Feed data ──────────────────────────────────────────────────────────────
+  var CASES = [
+    { name: "Valeria Romero",   meta: "RMN rodilla · Plan Plus 4",        badge: "✓ Resuelto por NEXA",      cls: "badge-nexa",      dot: "dot-green", timing: "8 s" },
+    { name: "Martín Acuña",     meta: "Artroscopia hombro · Plan Plus 2",  badge: "✓ Autorizado por SEA",     cls: "badge-sea",       dot: "dot-green", timing: "10 s" },
+    { name: "Ana García",       meta: "Consulta reintegro",                badge: "✓ Resuelto por NEXA",      cls: "badge-nexa",      dot: "dot-green", timing: "inmediato" },
+    { name: "Roberto Suárez",   meta: "Cirugía columna · Plan Plus 1",     badge: "⏳ Pendiente documentación",cls: "badge-pending",   dot: "dot-amber", timing: "" },
+    { name: "Claudia Méndez",   meta: "Tomografía de tórax · Plan Basic 2",badge: "→ Derivado a Auditoría",   cls: "badge-escalated", dot: "dot-amber", timing: "24–48 hs" },
+    { name: "Jorge Ibáñez",     meta: "RMN cadera · Plan Plus 3",          badge: "✓ Autorizado por SEA",     cls: "badge-sea",       dot: "dot-green", timing: "12 s" },
+    { name: "Patricia Vidal",   meta: "Consulta cobertura óptica",         badge: "✓ Resuelto por NEXA",      cls: "badge-nexa",      dot: "dot-green", timing: "inmediato" },
+    { name: "Sebastián Mora",   meta: "Artroscopia rodilla · con insumos", badge: "→ Derivado a Auditoría",   cls: "badge-escalated", dot: "dot-amber", timing: "72 hs" }
+  ];
+
+  var DAILY_TARGET  = 1699;
+  var COUNTER_MS    = 18000; // 18 s to reach target
+  var FEED_INTERVAL = 2000;  // new case every 2 s
+  var MAX_FEED_ROWS = 8;
+
+  var counterTimer = null;
+  var feedTimer    = null;
+  var feedIdx      = 0;
+  var counterEl    = document.getElementById("counter-display");
+  var feedBody     = document.getElementById("feed-body");
+
+  // ── Counter ────────────────────────────────────────────────────────────────
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function startCounter() {
+    if (counterTimer) clearInterval(counterTimer);
+    var start = Date.now();
+    counterTimer = setInterval(function () {
+      var elapsed  = Date.now() - start;
+      var progress = Math.min(elapsed / COUNTER_MS, 1);
+      var value    = Math.round(DAILY_TARGET * easeOutCubic(progress));
+      counterEl.textContent = value.toLocaleString("es-AR");
+      if (progress >= 1) clearInterval(counterTimer);
+    }, 80);
+  }
+
+  // ── Feed ───────────────────────────────────────────────────────────────────
+  function addFeedRow(c) {
+    var div = document.createElement("div");
+    div.className = "feed-item";
+    div.innerHTML =
+      "<div class='feed-dot-status " + c.dot + "'></div>" +
+      "<div>" +
+        "<div class='feed-name'>" + c.name + "</div>" +
+        "<div class='feed-meta'>" + c.meta + "</div>" +
+        (c.timing ? "<div class='feed-timing'>" + c.timing + "</div>" : "") +
+      "</div>" +
+      "<div class='feed-badge " + c.cls + "'>" + c.badge + "</div>";
+
+    feedBody.insertBefore(div, feedBody.firstChild);
+    var rows = feedBody.querySelectorAll(".feed-item");
+    if (rows.length > MAX_FEED_ROWS) feedBody.removeChild(rows[rows.length - 1]);
+  }
+
+  function startFeed() {
+    if (feedTimer) clearInterval(feedTimer);
+    feedIdx = 0;
+    addFeedRow(CASES[feedIdx % CASES.length]);
+    feedIdx++;
+    feedTimer = setInterval(function () {
+      addFeedRow(CASES[feedIdx % CASES.length]);
+      feedIdx++;
+    }, FEED_INTERVAL);
+  }
+
+  // ── Restart ────────────────────────────────────────────────────────────────
+  function restart() {
+    counterEl.textContent = "0";
+    feedBody.innerHTML = "";
+    startCounter();
+    startFeed();
+  }
+
+  // ── Shadow Mode bars (IntersectionObserver) ────────────────────────────────
+  function animateBars() {
+    // Slight delay between bars for a staggered reveal
+    setTimeout(function () { document.getElementById("pb-1").style.width = "60%"; },  300);
+    setTimeout(function () { document.getElementById("pb-2").style.width = "95%"; },  550);
+    // For ≤1% error, bar represents "maximum allowed" — kept narrow and amber
+    setTimeout(function () { document.getElementById("pb-3").style.width = "8%";  }, 800);
+  }
+
+  var barsAnimated = false;
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting && !barsAnimated) {
+        barsAnimated = true;
+        animateBars();
+      }
+    });
+  }, { threshold: 0.4 });
+  var shadowGrid = document.querySelector(".shadow-grid");
+  if (shadowGrid) observer.observe(shadowGrid);
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  startCounter();
+  startFeed();
+</script>
+
+</body>
+</html>
